@@ -70,31 +70,46 @@ function MPU6050_Init() --configure MPU6050
     I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_USER_CTRL, 0x00)
 end
 
-function read()   --read and print accelero, gyro and temperature value
+function extractRawNumber(rawData, index)
+    local firstByte = string.byte(rawData, index)
+    local secondByte = string.byte(rawData, index+1)
+    return unsignTosigned16bit(bit.bor(bit.lshift(firstByte, 8), secondByte))
+end
+
+function getTemperature(rawData, index)
+    local temperature = extractRawNumber(rawData, index)
+    return temperature/340+36.53
+end
+
+function getNumber(rawData, index, scaleFactor)
+    local number = extractRawNumber(rawData, index)
+    return number/scaleFactor
+end
+
+function readMpu()   --read and print accelero, gyro and temperature value
     data = I2C_Read(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_XOUT_H, 14)
     
-    AccelX = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 1), 8), string.byte(data, 2))))
-    AccelY = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 3), 8), string.byte(data, 4))))
-    AccelZ = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 5), 8), string.byte(data, 6))))
-    Temperature = unsignTosigned16bit(bit.bor(bit.lshift(string.byte(data,7), 8), string.byte(data,8)))
-    GyroX = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 9), 8), string.byte(data, 10))))
-    GyroY = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 11), 8), string.byte(data, 12))))
-    GyroZ = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 13), 8), string.byte(data, 14))))
+    local mpu = {
+        Accel = {
+            x = getNumber(data, 1, AccelScaleFactor),
+            y = getNumber(data, 3, AccelScaleFactor),
+            z = getNumber(data, 5, AccelScaleFactor)
+        },
+        Temperature = getTemperature(data,7),
+        Gyro = {
+            x = getNumber(data, 9,  GyroScaleFactor),
+            y = getNumber(data, 11, GyroScaleFactor),
+            z = getNumber(data, 13, GyroScaleFactor)
+        }
+    }
 
-    AccelX = AccelX/AccelScaleFactor   -- divide each with their sensitivity scale factor
-    AccelY = AccelY/AccelScaleFactor
-    AccelZ = AccelZ/AccelScaleFactor
-    Temperature = Temperature/340+36.53-- temperature formula
-    GyroX = GyroX/GyroScaleFactor
-    GyroY = GyroY/GyroScaleFactor
-    GyroZ = GyroZ/GyroScaleFactor
-    
-    print(string.format("Ax:%.3g Ay:%.3g Az:%.3g T:%.3g Gx:%.3g Gy:%.3g Gz:%.3g",
-                        AccelX, AccelY, AccelZ, Temperature, GyroX, GyroY, GyroZ))
+    print(sjson.encode(mpu))
+    return mpu
 end
 
 
 
 i2c.setup(id, sda, scl, i2c.SLOW)   -- initialize i2c
 MPU6050_Init()
-read()
+
+readMpu()

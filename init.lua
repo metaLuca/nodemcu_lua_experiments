@@ -1,12 +1,13 @@
 function startup()
   print("startup!!!")
 
--- while true than do
   dofile("mpu.lua")
   dofile("bluetooth.lua")
   openBluetooth2()
--- tmr.delay(100000)   -- 100ms timer delay
--- end
+--  while true than do
+--    read()
+--    tmr.delay(100000)   -- 100ms timer delay
+--  end
   if file.open("lucapilot.lua") == nil then
     print("lucapilot.lua missing")
   else
