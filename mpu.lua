@@ -19,6 +19,8 @@ MPU6050_REGISTER_INT_ENABLE = 0x38
 MPU6050_REGISTER_ACCEL_XOUT_H = 0x3B
 MPU6050_REGISTER_SIGNAL_PATH_RESET = 0x68
 
+local math_helpers = require("math_helpers")
+
 function I2C_Write(deviceAddress, regAddress, data)
     i2c.start(id) -- send start condition
     if (i2c.address(id, deviceAddress, i2c.TRANSMITTER)) then -- set slave address and transmit direction
@@ -99,6 +101,14 @@ function readMpu() --read and print accelero, gyro and temperature value
 
 --    print(sjson.encode({ Accel = Acc, Temperature = Tmp, Gyro = Gy }))
     return { Accel = Acc, Gyro = Gy, Temperature = Tmp }
+end
+
+function getRollPitchYaw(Accel, Gyro)
+    local pitch = -180 * math_helpers.atan2(Accel.x, math.sqrt(Accel.y * Accel.y + Accel.z * Accel.z)) / math.pi
+    local roll = 180 * math_helpers.atan2(Accel.y, Accel.z) / math.pi
+    local yaw = 180 * math_helpers.atan(Accel.z / math.sqrt(Accel.x * Accel.x + Accel.z * Accel.z)) / math.pi
+
+    return roll, pitch, yaw
 end
 
 function setupMpu()

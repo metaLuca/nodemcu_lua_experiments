@@ -1,7 +1,8 @@
 function startReadingMpu()
     tmr.create():alarm(1500, tmr.ALARM_AUTO, function()
-        local a = readMpu()
-        print(sjson.encode(a))
+        local mpu = readMpu() -- {Accel: {y, x, z}, Gyro: {y, x, z}, Temperature}
+        print(sjson.encode(mpu))
+        print(getRollPitchYaw(mpu.Accel, mpu.Gyro))
     end)
 end
 
