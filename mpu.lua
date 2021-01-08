@@ -21,7 +21,7 @@ MPU6050_REGISTER_SIGNAL_PATH_RESET = 0x68
 
 function I2C_Write(deviceAddress, regAddress, data)
     i2c.start(id) -- send start condition
-    if (i2c.address(id, deviceAddress, i2c.TRANSMITTER)) -- set slave address and transmit direction then
+    if (i2c.address(id, deviceAddress, i2c.TRANSMITTER)) then -- set slave address and transmit direction
         i2c.write(id, regAddress) -- write address to slave
         i2c.write(id, data) -- write data to slave
         i2c.stop(id) -- send stop condition
@@ -33,7 +33,7 @@ end
 function I2C_Read(deviceAddress, regAddress, SizeOfDataToRead)
     response = 0;
     i2c.start(id) -- send start condition
-    if (i2c.address(id, deviceAddress, i2c.TRANSMITTER)) -- set slave address and transmit direction then
+    if (i2c.address(id, deviceAddress, i2c.TRANSMITTER)) then -- set slave address and transmit direction
         i2c.write(id, regAddress) -- write address to slave
         i2c.stop(id) -- send stop condition
         i2c.start(id) -- send start condition
@@ -98,13 +98,10 @@ function readMpu() --read and print accelero, gyro and temperature value
     }
 
 --    print(sjson.encode({ Accel = Acc, Temperature = Tmp, Gyro = Gy }))
-    return { Accel = Acc, Temperature = Tmp, Gyro = Gy }
+    return { Accel = Acc, Gyro = Gy, Temperature = Tmp }
 end
 
 function setupMpu()
     i2c.setup(id, sda, scl, i2c.SLOW) -- initialize i2c
     MPU6050_Init()
 end
-
-setupMpu()
-readMpu()
