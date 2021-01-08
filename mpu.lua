@@ -62,10 +62,6 @@ function MPU6050_Init() --configure MPU6050
 end
 
 function unsignToSigned16bit(num) -- convert unsigned 16-bit no. to signed 16-bit no.
-    -- if num > 32768 then
-    --     num = num - 65536
-    -- end
-    -- return num
     return num > 32768 and
             num - 65536 or num
 end
@@ -89,26 +85,26 @@ end
 function readMpu() --read and print accelero, gyro and temperature value
     local data = I2C_Read(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_XOUT_H, 14)
 
-    local Accel = {
+    local Acc = {
         x = getNumber(data, 1, AccelScaleFactor),
         y = getNumber(data, 3, AccelScaleFactor),
         z = getNumber(data, 5, AccelScaleFactor)
     }
-    local Temperature = getTemperature(data, 7)
-    local Gyro = {
+    local Tmp = getTemperature(data, 7)
+    local Gy = {
         x = getNumber(data, 9, GyroScaleFactor),
         y = getNumber(data, 11, GyroScaleFactor),
         z = getNumber(data, 13, GyroScaleFactor)
     }
-    local mpu = { Accel, Temperature, Gyro }
 
-    print(sjson.encode(mpu))
-    return mpu
+--    print(sjson.encode({ Accel = Acc, Temperature = Tmp, Gyro = Gy }))
+    return { Accel = Acc, Temperature = Tmp, Gyro = Gy }
 end
 
+function setupMpu()
+    i2c.setup(id, sda, scl, i2c.SLOW) -- initialize i2c
+    MPU6050_Init()
+end
 
-
-i2c.setup(id, sda, scl, i2c.SLOW) -- initialize i2c
-MPU6050_Init()
-
+setupMpu()
 readMpu()
