@@ -65,4 +65,8 @@ function math_helpers.atan2(y, x)
     end
 end
 
+function floor(number, decimals)
+    return tonumber(string.format("%."..decimals.."f",(number)))
+end
+
 return math_helpers
