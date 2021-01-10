@@ -26,7 +26,7 @@ end
 function startReadingMpu()
     tmr.create():alarm(1500, tmr.ALARM_AUTO, function()
         local mpu = readMpu() -- {Accel: {y, x, z}, Gyro: {y, x, z}, Temperature}
-        --print(sjson.encode(mpu))
+--        print(sjson.encode(mpu))
         local roll, pitch, yaw = getRollPitchYaw(mpu.Accel, mpu.Gyro)
         local rollOut, pitchOut, yawOut = getRPYOut(roll, pitch, yaw)
         printMotorOutput(lastRedThrottle, rollOut, pitchOut, yawOut)

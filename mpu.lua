@@ -7,6 +7,7 @@ MPU6050SlaveAddress = 0x68
 
 AccelScaleFactor = 16384; -- sensitivity scale factor respective to full scale setting provided in datasheet
 GyroScaleFactor = 131;
+ACCEL_GYRO_ERROR = {}
 
 
 MPU6050_REGISTER_SMPLRT_DIV = 0x19
@@ -88,15 +89,15 @@ function readMpu() --read and print accelero, gyro and temperature value
     local data = I2C_Read(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_XOUT_H, 14)
 
     local Acc = {
-        x = getNumber(data, 1, AccelScaleFactor),
-        y = getNumber(data, 3, AccelScaleFactor),
-        z = getNumber(data, 5, AccelScaleFactor)
+        x = getNumber(data, 1, AccelScaleFactor) - ACCEL_GYRO_ERROR.Accel.x,
+        y = getNumber(data, 3, AccelScaleFactor) - ACCEL_GYRO_ERROR.Accel.y,
+        z = getNumber(data, 5, AccelScaleFactor) - ACCEL_GYRO_ERROR.Accel.z
     }
     local Tmp = getTemperature(data, 7)
     local Gy = {
-        x = getNumber(data, 9, GyroScaleFactor),
-        y = getNumber(data, 11, GyroScaleFactor),
-        z = getNumber(data, 13, GyroScaleFactor)
+        x = getNumber(data, 9,  GyroScaleFactor) - ACCEL_GYRO_ERROR.Gyro.x,
+        y = getNumber(data, 11, GyroScaleFactor) - ACCEL_GYRO_ERROR.Gyro.y,
+        z = getNumber(data, 13, GyroScaleFactor) - ACCEL_GYRO_ERROR.Gyro.z
     }
 
     --    print(sjson.encode({ Accel = Acc, Temperature = Tmp, Gyro = Gy }))
@@ -111,7 +112,30 @@ function getRollPitchYaw(Accel, Gyro)
     return roll, pitch, yaw
 end
 
+function normalizeValue(min, max, value)
+    --todo
+end
+
+function setAccelGyroError()
+    local ax, ay, az, gx, gy, gz
+    ACCEL_GYRO_ERROR = { Accel = { x = 0, y = 0, z = 0 }, Gyro = { x = 0, y = 0, z = 0 } }
+    for i = 0, 1, 200 do
+        local reading = readMpu()
+        ax = ax + reading.Acc.x
+        ay = ay + reading.Acc.y
+        az = az + reading.Acc.z
+        gx = gx + reading.Gy.x
+        gy = gy + reading.Gy.y
+        gz = gz + reading.Gy.z
+    end
+    ACCEL_GYRO_ERROR = {
+        Accel = { x = ax / 200, y = ay / 200, z = az / 200 },
+        Gyro = { x = gx / 200, y = gy / 200, z = gz / 200 }
+    }
+end
+
 function setupMpu()
     i2c.setup(id, sda, scl, i2c.SLOW) -- initialize i2c
     MPU6050_Init()
+    setAccelGyroError()
 end
