@@ -80,24 +80,25 @@ function getTemperature(rawData, index)
     return temperature / 340 + 36.53
 end
 
-function getNumber(rawData, index, scaleFactor)
+function getNumber(rawData, index, scaleFactor, error)
     local number = extractRawNumber(rawData, index)
-    return number / scaleFactor
+    local scaled = number / scaleFactor
+    return scaled - error
 end
 
 function readMpu() --read and print accelero, gyro and temperature value
     local data = I2C_Read(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_XOUT_H, 14)
 
     local Acc = {
-        x = getNumber(data, 1, AccelScaleFactor) - ACCEL_GYRO_ERROR.Accel.x,
-        y = getNumber(data, 3, AccelScaleFactor) - ACCEL_GYRO_ERROR.Accel.y,
-        z = getNumber(data, 5, AccelScaleFactor) - ACCEL_GYRO_ERROR.Accel.z
+        x = getNumber(data, 1, AccelScaleFactor, ACCEL_GYRO_ERROR.Accel.x),
+        y = getNumber(data, 3, AccelScaleFactor, ACCEL_GYRO_ERROR.Accel.y),
+        z = getNumber(data, 5, AccelScaleFactor, ACCEL_GYRO_ERROR.Accel.z)
     }
     local Tmp = getTemperature(data, 7)
     local Gy = {
-        x = getNumber(data, 9,  GyroScaleFactor) - ACCEL_GYRO_ERROR.Gyro.x,
-        y = getNumber(data, 11, GyroScaleFactor) - ACCEL_GYRO_ERROR.Gyro.y,
-        z = getNumber(data, 13, GyroScaleFactor) - ACCEL_GYRO_ERROR.Gyro.z
+        x = getNumber(data, 9,  GyroScaleFactor, ACCEL_GYRO_ERROR.Gyro.x),
+        y = getNumber(data, 11, GyroScaleFactor, ACCEL_GYRO_ERROR.Gyro.y),
+        z = getNumber(data, 13, GyroScaleFactor, ACCEL_GYRO_ERROR.Gyro.z)
     }
 
     --    print(sjson.encode({ Accel = Acc, Temperature = Tmp, Gyro = Gy }))
@@ -105,9 +106,16 @@ function readMpu() --read and print accelero, gyro and temperature value
 end
 
 function getRollPitchYaw(Accel, Gyro)
-    local pitch = -180 * math_helpers.atan2(Accel.x, math.sqrt(Accel.y * Accel.y + Accel.z * Accel.z)) / math.pi
-    local roll = 180 * math_helpers.atan2(Accel.y, Accel.z) / math.pi
-    local yaw = 180 * math_helpers.atan(Accel.z / math.sqrt(Accel.x * Accel.x + Accel.z * Accel.z)) / math.pi
+    local pitch = 180 * math_helpers.atan2(Accel.x, math.sqrt(Accel.y * Accel.y + Accel.z * Accel.z)) / math.pi;
+    local roll = 180 * math_helpers.atan2(Accel.y, math.sqrt(Accel.x * Accel.x + Accel.z * Accel.z)) / math.pi;
+    local yaw = 180 * math_helpers.atan(Accel.z / math.sqrt(Accel.x * Accel.x + Accel.z * Accel.z)) / math.pi;
+
+--    Keep angle between 0-359 degrees
+    if yaw < 0 then
+        yaw = yaw + 360
+    elseif yaw > 359 then
+        yaw = yaw - 360
+    end
 
     return roll, pitch, yaw
 end
@@ -117,21 +125,24 @@ function normalizeValue(min, max, value)
 end
 
 function setAccelGyroError()
-    local ax, ay, az, gx, gy, gz
+    local ax, ay, az, gx, gy, gz = unpack({ 0, 0, 0, 0, 0, 0 })
     ACCEL_GYRO_ERROR = { Accel = { x = 0, y = 0, z = 0 }, Gyro = { x = 0, y = 0, z = 0 } }
     for i = 0, 1, 200 do
         local reading = readMpu()
-        ax = ax + reading.Acc.x
-        ay = ay + reading.Acc.y
-        az = az + reading.Acc.z
-        gx = gx + reading.Gy.x
-        gy = gy + reading.Gy.y
-        gz = gz + reading.Gy.z
+        ax = ax + reading.Accel.x
+        ay = ay + reading.Accel.y
+        az = az + reading.Accel.z
+        gx = gx + reading.Gyro.x
+        gy = gy + reading.Gyro.y
+        gz = gz + reading.Gyro.z
+        tmr.delay(10)
     end
     ACCEL_GYRO_ERROR = {
-        Accel = { x = ax / 200, y = ay / 200, z = az / 200 },
-        Gyro = { x = gx / 200, y = gy / 200, z = gz / 200 }
+        Accel = { x = floor(ax / 200, 4), y = floor(ay / 200, 4), z = floor(az / 200, 4) },
+        Gyro = { x = floor(gx / 200, 4), y = floor(gy / 200, 4), z = floor(gz / 200, 4) }
     }
+    print("____ERRORs____")
+    print(sjson.encode(ACCEL_GYRO_ERROR))
 end
 
 function setupMpu()
