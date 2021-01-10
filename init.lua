@@ -16,8 +16,11 @@ function printMotorOutput(throttle, roll, pitch, yaw)
 end
 
 function getRPYOut(roll, pitch, yaw)
-    --todo use pid
-    return roll, pitch, yaw
+    -- setPoint value is always 0 cause i just want it to be stable. change it to make it move
+    local rollOut = ROLL_CONTROL:update(0, roll)
+    local pitchOut = PITCH_CONTROL:update(0, pitch)
+    local yawOut = YAW_CONTROL:update(0, yaw)
+    return rollOut, pitchOut, yawOut
 end
 
 function startReadingMpu()
