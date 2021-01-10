@@ -10,8 +10,8 @@ function printMotorOutput(throttle, roll, pitch, yaw)
     local motorD = throttle - pitch + yaw
 
     print("------------------")
-    print("throttle: "..throttle..", roll: "..roll..", pitch: "..pitch..", yaw: "..yaw)
-    print("M_A: "..motorA..", M_B"..motorB..", M_C"..motorC..", M_D"..motorD)
+    print("throttle: " .. throttle .. ", roll: " .. roll .. ", pitch: " .. pitch .. ", yaw: " .. yaw)
+    print("M_A: " .. motorA .. ", M_B" .. motorB .. ", M_C" .. motorC .. ", M_D" .. motorD)
     print("------------------")
 end
 
@@ -42,7 +42,7 @@ end
 function startup()
     print("startup!!!")
 
--- (probably doesnt matter now but..) consider switching to require
+    -- (probably doesnt matter now but..) consider switching to require
     dofile("mpu.lua")
     dofile("bluetooth.lua")
     dofile("pidController.lua")

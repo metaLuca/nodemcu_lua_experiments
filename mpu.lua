@@ -1,3 +1,5 @@
+local math_helpers = require("math_helpers")
+
 id = 0 -- always 0
 scl = 6 -- set pin as scl
 sda = 7 -- set pin as sda
@@ -18,8 +20,6 @@ MPU6050_REGISTER_FIFO_EN = 0x23
 MPU6050_REGISTER_INT_ENABLE = 0x38
 MPU6050_REGISTER_ACCEL_XOUT_H = 0x3B
 MPU6050_REGISTER_SIGNAL_PATH_RESET = 0x68
-
-local math_helpers = require("math_helpers")
 
 function I2C_Write(deviceAddress, regAddress, data)
     i2c.start(id) -- send start condition
@@ -99,7 +99,7 @@ function readMpu() --read and print accelero, gyro and temperature value
         z = getNumber(data, 13, GyroScaleFactor)
     }
 
---    print(sjson.encode({ Accel = Acc, Temperature = Tmp, Gyro = Gy }))
+    --    print(sjson.encode({ Accel = Acc, Temperature = Tmp, Gyro = Gy }))
     return { Accel = Acc, Gyro = Gy, Temperature = Tmp }
 end
 

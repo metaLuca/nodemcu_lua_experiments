@@ -1,6 +1,6 @@
-PidController = { k_p = 0 , k_i = 0, k_d = 0, E= 0, D = 0, I = 0 }
+PidController = { k_p = 0, k_i = 0, k_d = 0, E = 0, D = 0, I = 0 }
 
-function PidController:new (k_p, k_i, k_d)
+function PidController:new(k_p, k_i, k_d)
     obj = {}
     setmetatable(obj, self)
     self.__index = self
@@ -10,7 +10,7 @@ function PidController:new (k_p, k_i, k_d)
     return obj
 end
 
-function PidController:update (setPoint, processValue)
+function PidController:update(setPoint, processValue)
     local Error = setPoint - processValue
     local D = Error - self.E
     local A = math.abs(D - self.D)
