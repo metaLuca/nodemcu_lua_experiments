@@ -46,10 +46,12 @@ function startup()
     dofile("mpu.lua")
     dofile("bluetooth.lua")
     dofile("pidController.lua")
+    dofile("pwm2_test.lua")
 
     setupMpu()
     openBluetooth2()
     startReadingMpu()
+    starPwm2Test()
     setupPidControllers()
 end
 
