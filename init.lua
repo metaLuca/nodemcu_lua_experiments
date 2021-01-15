@@ -51,7 +51,7 @@ function startup()
     setupMpu()
     openBluetooth2()
     startReadingMpu()
-    starPwm2Test()
+    startPwm2Test()
     setupPidControllers()
 end
 
